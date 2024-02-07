@@ -1,153 +1,186 @@
 import java.util.*;
 
 class Process {
-    int processNumber, arrivalTime, cpuBurstTime, waitingTime, turnaroundTime, completionTime, priority,
-            originalCpuBurstTime;
 
-    Process(int processNumber, int arrivalTime, int cpuBurstTime, int priority) {
-        this.processNumber = processNumber;
-        this.arrivalTime = arrivalTime;
-        this.cpuBurstTime = cpuBurstTime;
-        this.priority = priority;
-    }
+  int processNumber, arrivalTime, cpuBurstTime, waitingTime, turnaroundTime, completionTime, priority, originalCpuBurstTime;
+
+  Process(int processNumber, int arrivalTime, int cpuBurstTime, int priority) {
+    this.processNumber = processNumber;
+    this.arrivalTime = arrivalTime;
+    this.cpuBurstTime = cpuBurstTime;
+    this.priority = priority;
+  }
 }
 
 public class PriorityScheduling20200204049 {
-    private static final char START_CHAR = 'A';
 
-    public static void main(String[] args) {
-        Scanner inputScanner = new Scanner(System.in);
-        System.out.print("Enter the number of processes: ");
-        int numberOfProcesses = inputScanner.nextInt();
+  private static final char START_CHAR = 'A';
 
-        Process[] processes = new Process[numberOfProcesses];
-        System.out.println("Enter the CPU burst times, arrival times, and priorities:");
+  public static void main(String[] args) {
+    Scanner inputScanner = new Scanner(System.in);
+    System.out.print("Enter the number of processes: ");
+    int numberOfProcesses = inputScanner.nextInt();
 
-        for (int i = 0; i < numberOfProcesses; i++) {
-            System.out.printf("Enter CPU burst time, Arrival time, and Priority for process %c: ", START_CHAR + i);
-            int cpuBurstTime = inputScanner.nextInt();
-            int arrivalTime = inputScanner.nextInt();
-            int priority = inputScanner.nextInt();
+    Process[] processes = new Process[numberOfProcesses];
+    System.out.println(
+      "Enter the CPU burst times, arrival times, and priorities:"
+    );
 
-            processes[i] = new Process(i, arrivalTime, cpuBurstTime, priority);
-        }
+    for (int i = 0; i < numberOfProcesses; i++) {
+      System.out.printf(
+        "Enter CPU burst time, Arrival time, and Priority for process %c: ",
+        START_CHAR + i
+      );
+      int cpuBurstTime = inputScanner.nextInt();
+      int arrivalTime = inputScanner.nextInt();
+      int priority = inputScanner.nextInt();
 
-        Arrays.sort(processes, Comparator.comparingInt(p -> p.arrivalTime));
-
-        nonPreemptivePriorityScheduling(Arrays.copyOf(processes, processes.length));
-
-        preemptivePriorityScheduling(Arrays.copyOf(processes, processes.length));
+      processes[i] = new Process(i, arrivalTime, cpuBurstTime, priority);
     }
 
-    // Non-Preemptive Priority Scheduling
-    private static void nonPreemptivePriorityScheduling(Process[] processes) {
-        PriorityQueue<Process> queue = new PriorityQueue<>(Comparator.comparingInt(p -> p.priority));
-        List<Process> completedProcesses = new ArrayList<>();
+    Arrays.sort(processes, Comparator.comparingInt(p -> p.arrivalTime));
 
-        int currentTime = 0;
-        int index = 0;
+    nonPreemptivePriorityScheduling(Arrays.copyOf(processes, processes.length));
 
-        System.out.println("\nNon-Preemptive Gantt Chart:");
-        System.out.print(currentTime);
+    preemptivePriorityScheduling(Arrays.copyOf(processes, processes.length));
+  }
 
-        while (!queue.isEmpty() || index < processes.length) {
-            while (index < processes.length && processes[index].arrivalTime <= currentTime) {
-                queue.add(processes[index]);
-                index++;
-            }
+  // Non-Preemptive Priority Scheduling
+  private static void nonPreemptivePriorityScheduling(Process[] processes) {
+    PriorityQueue<Process> queue = new PriorityQueue<>(
+      Comparator.comparingInt(p -> p.priority)
+    );
+    List<Process> completedProcesses = new ArrayList<>();
 
-            if (!queue.isEmpty()) {
-                Process currentProcess = queue.poll();
-                int burstTime = currentProcess.cpuBurstTime;
+    int currentTime = 0;
+    int index = 0;
 
-                currentTime += burstTime;
-                currentProcess.completionTime = currentTime;
-                currentProcess.turnaroundTime = currentProcess.completionTime - currentProcess.arrivalTime;
-                currentProcess.waitingTime = currentProcess.turnaroundTime - currentProcess.cpuBurstTime;
+    System.out.println("\nNon-Preemptive Gantt Chart:");
+    System.out.print(currentTime);
 
-                for (int j = 0; j < burstTime; j++) {
-                    System.out.print("-- " + (char) ('A' + currentProcess.processNumber) + " --" + currentTime);
-                }
+    while (!queue.isEmpty() || index < processes.length) {
+      while (
+        index < processes.length && processes[index].arrivalTime <= currentTime
+      ) {
+        queue.add(processes[index]);
+        index++;
+      }
 
-                completedProcesses.add(currentProcess);
-            } else {
-                currentTime = processes[index].arrivalTime;
-            }
+      if (!queue.isEmpty()) {
+        Process currentProcess = queue.poll();
+        int burstTime = currentProcess.cpuBurstTime;
+
+        currentTime += burstTime;
+        currentProcess.completionTime = currentTime;
+        currentProcess.turnaroundTime =
+          currentProcess.completionTime - currentProcess.arrivalTime;
+        currentProcess.waitingTime =
+          currentProcess.turnaroundTime - currentProcess.cpuBurstTime;
+
+        for (int j = 0; j < burstTime; j++) {
+          System.out.print(
+            "-- " +
+            (char) ('A' + currentProcess.processNumber) +
+            " --" +
+            currentTime
+          );
         }
 
-        System.out.println();
-        printResults(completedProcesses, "Non-Preemptive");
+        completedProcesses.add(currentProcess);
+      } else {
+        currentTime = processes[index].arrivalTime;
+      }
     }
 
-    private static void preemptivePriorityScheduling(Process[] processes) {
-        List<Process> completedProcesses = new ArrayList<>();
-        PriorityQueue<Process> queue = new PriorityQueue<>(Comparator.comparingInt(p -> p.priority));
+    System.out.println();
+    printResults(completedProcesses, "Non-Preemptive");
+  }
 
-        int currentTime = 0;
-        int index = 0;
+  private static void preemptivePriorityScheduling(Process[] processes) {
+    List<Process> completedProcesses = new ArrayList<>();
+    PriorityQueue<Process> queue = new PriorityQueue<>(
+      Comparator.comparingInt(p -> p.priority)
+    );
 
-        System.out.println("\nPreemptive Gantt Chart:");
-        System.out.print(currentTime);
+    int currentTime = 0;
+    int index = 0;
 
-        while (index < processes.length || !queue.isEmpty()) {
-            while (index < processes.length && processes[index].arrivalTime <= currentTime) {
-                processes[index].originalCpuBurstTime = processes[index].cpuBurstTime;
-                queue.add(processes[index]);
-                index++;
-            }
+    System.out.println("\nPreemptive Gantt Chart:");
+    System.out.print(currentTime);
 
-            if (!queue.isEmpty()) {
-                Process currentProcess = queue.poll();
-                int burstTime = currentProcess.cpuBurstTime;
-                if (index < processes.length) {
-                    burstTime = Math.min(burstTime, processes[index].arrivalTime - currentTime);
-                }
+    while (index < processes.length || !queue.isEmpty()) {
+      while (
+        index < processes.length && processes[index].arrivalTime <= currentTime
+      ) {
+        processes[index].originalCpuBurstTime = processes[index].cpuBurstTime;
+        queue.add(processes[index]);
+        index++;
+      }
 
-                currentTime += burstTime;
-                currentProcess.cpuBurstTime -= burstTime;
-
-                for (int j = 0; j < burstTime; j++) {
-                    System.out.print("-- " + (char) ('A' + currentProcess.processNumber) + " --" + currentTime);
-                }
-
-                if (currentProcess.cpuBurstTime > 0) {
-                    queue.add(currentProcess);
-                } else {
-                    currentProcess.completionTime = currentTime;
-                    currentProcess.turnaroundTime = currentProcess.completionTime - currentProcess.arrivalTime;
-                    currentProcess.waitingTime = currentProcess.turnaroundTime - currentProcess.originalCpuBurstTime;
-                    completedProcesses.add(currentProcess);
-                }
-            } else if (index < processes.length) {
-                currentTime = processes[index].arrivalTime;
-            }
+      if (!queue.isEmpty()) {
+        Process currentProcess = queue.poll();
+        int burstTime = currentProcess.cpuBurstTime;
+        if (index < processes.length) {
+          burstTime =
+            Math.min(burstTime, processes[index].arrivalTime - currentTime);
         }
 
-        System.out.println();
-        printResults(completedProcesses, "Preemptive");
-    }
+        currentTime += burstTime;
+        currentProcess.cpuBurstTime -= burstTime;
 
-    private static void printResults(List<Process> processes, String type) {
-
-        System.out.println(type + " Priority Scheduling:");
-        int totalWaitingTime = 0;
-        int totalTurnaroundTime = 0;
-
-        for (Process process : processes) {
-            totalWaitingTime += process.waitingTime;
-            totalTurnaroundTime += process.turnaroundTime;
-            System.out.printf(
-                    "\nProcess %c - Arrival Time: %d, CPU Burst Time: %d, Waiting Time: %d, Turnaround Time: %d",
-                    START_CHAR + process.processNumber, process.arrivalTime, process.originalCpuBurstTime,
-                    process.waitingTime, process.turnaroundTime);
+        for (int j = 0; j < burstTime; j++) {
+          System.out.print(
+            "-- " +
+            (char) ('A' + currentProcess.processNumber) +
+            " --" +
+            currentTime
+          );
         }
 
-        double averageWaitingTime = (double) totalWaitingTime / processes.size();
-        double averageTurnaroundTime = (double) totalTurnaroundTime / processes.size();
-
-        System.out.println("\nTotal Waiting Time: " + totalWaitingTime);
-        System.out.println("Average Waiting Time: " + averageWaitingTime);
-        System.out.println("Total Turnaround Time: " + totalTurnaroundTime);
-        System.out.println("Average Turnaround Time: " + averageTurnaroundTime);
+        if (currentProcess.cpuBurstTime > 0) {
+          queue.add(currentProcess);
+        } else {
+          currentProcess.completionTime = currentTime;
+          currentProcess.turnaroundTime =
+            currentProcess.completionTime - currentProcess.arrivalTime;
+          currentProcess.waitingTime =
+            currentProcess.turnaroundTime - currentProcess.originalCpuBurstTime;
+          completedProcesses.add(currentProcess);
+        }
+      } else if (index < processes.length) {
+        currentTime = processes[index].arrivalTime;
+      }
     }
+
+    System.out.println();
+    printResults(completedProcesses, "Preemptive");
+  }
+
+  private static void printResults(List<Process> processes, String type) {
+    System.out.println(type + " Priority Scheduling:");
+    int totalWaitingTime = 0;
+    int totalTurnaroundTime = 0;
+
+    for (Process process : processes) {
+      totalWaitingTime += process.waitingTime;
+      totalTurnaroundTime += process.turnaroundTime;
+      System.out.printf(
+        "\nProcess %c - Arrival Time: %d, CPU Burst Time: %d, Waiting Time: %d, Turnaround Time: %d",
+        START_CHAR + process.processNumber,
+        process.arrivalTime,
+        process.originalCpuBurstTime,
+        process.waitingTime,
+        process.turnaroundTime
+      );
+    }
+
+    double averageWaitingTime = (double) totalWaitingTime / processes.size();
+    double averageTurnaroundTime = (double) totalTurnaroundTime /
+    processes.size();
+
+    System.out.println("\nTotal Waiting Time: " + totalWaitingTime);
+    System.out.println("Average Waiting Time: " + averageWaitingTime);
+    System.out.println("Total Turnaround Time: " + totalTurnaroundTime);
+    System.out.println("Average Turnaround Time: " + averageTurnaroundTime);
+  }
 }
